@@ -2,6 +2,7 @@ plugins {
     id 'org.springframework.boot' version '2.7.1'
     id 'io.spring.dependency-management' version '1.0.11.RELEASE'
     id 'java'
+    id 'jacoco'
 }
 
 group = 'me.seun'
@@ -21,11 +22,48 @@ repositories {
 dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
     implementation 'org.springframework.boot:spring-boot-starter-web'
+
+    runtimeOnly 'com.h2database:h2'
+
     compileOnly 'org.projectlombok:lombok'
     annotationProcessor 'org.projectlombok:lombok'
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
 }
 
-tasks.named('test') {
+test {
     useJUnitPlatform()
+    // 테스트 시 jacoco 테스트 보고서 작성 태스크 수행
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    // 테스트 보고서 작성 시 테스트 커버리지 검증 작업
+    finalizedBy jacocoTestCoverageVerification
+}
+
+jacocoTestCoverageVerification {
+
+    violationRules {
+        rule {
+            element = 'CLASS'
+
+            // [테스트 통과 조건] 분기 커버리지 80 퍼센트 이상
+            limit {
+                counter = 'BRANCH'
+                value = 'COVEREDRATIO'
+                minimum = 0.80
+            }
+
+            // [테스트 통과 조건] 문장 커버리지 90 퍼센트 이상
+            limit {
+                counter = 'LINE'
+                value = 'COVEREDRATIO'
+                minimum = 0.90
+            }
+
+            // 스프링 애플리케이션을 실행하는 메인 메소드는 커버리지 제약조건 대상에서 제외
+            excludes = ['me.seun.springjacoco.SpringJacocoApplication']
+        }
+    }
 }
